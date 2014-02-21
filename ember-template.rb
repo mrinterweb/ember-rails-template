@@ -7,9 +7,10 @@ rescue LoadError
   gem_group :development do
     gem 'highline'
   end
+  run_bundle
 
   puts "just added the highline gem to your Gemfile"
-  puts "please bundle install and rerun the rake command"
+  puts "now that HighLine is installed, please rerun the rake rails:template task"
   exit 1
 end
 # ----------------------- highline gem --- END
@@ -117,9 +118,6 @@ class FileManipulator
 
 end
 
-# a = Prompt.new('foo?').ask_and_verify(nil, default: 'bar')
-# puts "answer: #{a}"
-# exit 0
 # ----------------------- .bowerrc --- START
 
 # check for bower and optionally install bower
@@ -202,7 +200,7 @@ FileManipulator.new('config/application.rb').
   insert_after(/ < Rails::Application/, "    config.ember.app_name = '#{ember_app_name.camelize}'").write!
 
 puts "boostraping ember"
-run "rails generate ember:bootstrap -n #{ember_app_name} -je #{use_coffeescript ? 'coffee' : 'js'}"
+generate "ember:bootstrap", "-n #{ember_app_name}", "-je #{use_coffeescript ? 'coffee' : 'js'}"
 if use_coffeescript
   remove_file 'app/assets/javascripts/application.js'
   application_coffee = 'app/assets/javascripts/application.js.coffee'
@@ -225,7 +223,7 @@ if Prompt.new('Would you like to install ember.js and dependencies?').yes_no(def
   else
     install_ember_data = false
   end
-  run "rails generate ember:install --channel=#{ember_channel} #{install_ember_data ? '' : '--ember-only'}"
+  generate "ember:install", "--channel=#{ember_channel}", ('--ember-only' if install_ember_data)
 
   jquery_version = choose do |c|
     c.prompt = "Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)"
@@ -248,12 +246,12 @@ if Prompt.new('How about I install guard and teaspoon to run your ember applicat
     gem 'guard-teaspoon'
   end
 
-  run 'bundle install'
+  run_bundle
   run 'guard init'
   if use_rspec
     # the QUnit generator is nasty and only installs for TestUnit
     # So now for some fun getting it to work with rspec
-    run "rails generate teaspoon:install#{use_coffeescript ? ' --coffee' : ''}"
+    generate "teaspoon:install", (' --coffee' if use_coffeescript)
 
     path = 'config/initializers/teaspoon.rb'
     File.write(path, File.read(path).gsub('teaspoon-jasmine', 'teaspoon-qunit'))
@@ -262,7 +260,7 @@ if Prompt.new('How about I install guard and teaspoon to run your ember applicat
     # path = 'spec/teaspoon_env.rb'
     # File.write(path, File.read(path).sub(/#(config.server_port\s+)= nil/, "#{$1}= 3100"))
   else
-    run "rails generate teaspoon:install --framework=qunit#{use_coffeescript ? ' --coffee' : ''}"
+    generate "teaspoon:install", "--framework=qunit", ('--coffee' if use_coffeescript)
   end
 end
 # ----------------------- teaspoon --- END
@@ -291,7 +289,7 @@ if phantomjs_installed
   gem_group :development, :test do
     gem 'phantomjs'
   end
-  run 'bundle install'
+  run_bundle
 end
 # ----------------------- phantomjs --- END
 
