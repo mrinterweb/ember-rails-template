@@ -164,7 +164,7 @@ if use_rspec
   gem_group :development, :test do
     gem 'rspec-rails'
   end
-  run 'bundle install'
+  run_bundle
   generate 'rspec:install'
 
   rspec_config_options = <<-EOS
@@ -196,6 +196,10 @@ if !@app_name.blank? && Prompt.new("Do you want your ember app to be named: #{@a
 else 
   ember_app_name = Prompt.new("What would your Ember app named? (maybe just plain old: App)").ask_and_verify(/^[a-z\-_]+$/i, error: 'Must contain any of the following: letters, numbers, -, _', default: 'App')
 end
+
+# add the ember app name to config/application
+FileManipulator.new('config/application.rb').
+  insert_after(/ < Rails::Application/, "    config.ember.app_name = '#{ember_app_name.camelize}'").write!
 
 puts "boostraping ember"
 run "rails generate ember:bootstrap -n #{ember_app_name} -je #{use_coffeescript ? 'coffee' : 'js'}"
@@ -287,7 +291,28 @@ if phantomjs_installed
   gem_group :development, :test do
     gem 'phantomjs'
   end
+  run 'bundle install'
 end
 # ----------------------- phantomjs --- END
 
+# ----------------------- genember bin stub --- START
+genember_target = 'genember'
+unless File.exists?(genember_target)
+  source_genember = File.join(File.dirname(__FILE__), 'genember.rb')
+  if File.exists?(source_genember)
+    file genember_target, File.read(source_genember)
+  else
+    # go fetch it from github
+    require 'open-uri'
+    file genember_target, open('https://raw2.github.com/mrinterweb/ember-rails-template/master/genember.rb').read
+  end
+  puts 'Just added a handy shortcut to "rails generate ember:* *" called genember as a binstub.'
+end
+unless File.executable?(genember_target)
+  File.chmod(0755, genember_target)
+end
+if system "ln -s app/assets/javascripts js"
+  puts "just added a symlink to your javascripts folder. It's a time saver"
+end
+# ----------------------- genember bin stub --- END
 
