@@ -154,6 +154,15 @@ EOS
 
 answers = OpenStruct.new
 
+edge_ember_template_path = File.join(File.dirname(__FILE__), 'edge_template.rb')
+unless File.exists?(edge_ember_template_path)
+  edge_ember_template_path = 'https://raw2.github.com/mrinterweb/ember-rails-template/master/edge_template.rb'
+end
+puts "Slightly modified edge_template path: #{edge_ember_template_path}"
+if Prompt.new("Would you like to install a slightly modified tempalte based on the one found at http://emberjs.com/edge_template.rb").yes_no(default: 'y')
+  run "rake rails:template LOCATION=#{edge_ember_template_path}"
+end
+
 bower_installed = false
 if system('which bower')
   bower_installed = true
