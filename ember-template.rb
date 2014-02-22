@@ -97,6 +97,20 @@ class FileManipulator
     end
     self
   end
+  
+  def comment(pattern, options={})
+    comment_type = options[:comment_type] || :ruby
+    comment_types = { ruby: '#', javascript: '//', coffeescript: '#' } 
+    i = find_index(pattern)
+    lines[i] = "#{comment_types[comment_type]} #{lines[i]}" if i
+    self
+  end
+
+  def delete_line(pattern)
+    i = find_index(pattern)
+    lines.delete_at i if i
+    self
+  end
 
   def write!
     File.write(@path, lines.join)
@@ -119,6 +133,12 @@ class FileManipulator
   end
 
 end
+
+FileManipulator.new('Gemfile').
+  comment(/gem.+jquery\-rails/).
+  comment(/gem.+turbolinks/).
+  comment(/gem.+jbuilder/).
+  write!
 
 # ----------------------- Question and Anser Time --- START
 rspec_config_options = <<-EOS
