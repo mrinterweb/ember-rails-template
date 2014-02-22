@@ -171,8 +171,8 @@ else
 end
 answers.use_rspec = Prompt.new('Would you like to use rspec').yes_no(default: 'y')
 if answers.use_rspec
-  puts "Take a look at this:\n#{rspec_config_options}"
-  puts "Now imagine it in your config/application.rb"
+  puts HighLine.color("Take a look at this:\n#{rspec_config_options}", :yellow)
+  puts HighLine.color("Now imagine it in your config/application.rb", :yellow)
   answers.insert_rspec_config_options = Prompt.new("Is it ok if I add that to config/application.rb?").yes_no(default: 'y')
   unless answers.insert_rspec_config_options
     puts "Ok. I understand. I won't mess with that file."
