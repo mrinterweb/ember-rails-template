@@ -118,20 +118,80 @@ class FileManipulator
 
 end
 
-# ----------------------- .bowerrc --- START
+# ----------------------- Question and Anser Time --- START
+rspec_config_options = <<-EOS
+    config.generators do |gen|
+      gen.test_framework :rspec,
+                         fixtures: true,
+                         view_specs: false,
+                         helper_specs: false,
+                         routing_specs: false
+      gen.factory_girl true
+    end
+EOS
 
-# check for bower and optionally install bower
-unless system('which bower')
+answers = OpenStruct.new
+
+bower_installed = false
+if system('which bower')
+  bower_installed = true
+else
+  answers.install_bower = Prompt.new('Would you like for bower to be installed?').yes_no(default: 'y')
+end
+answers.use_rspec = Prompt.new('Would you like to use rspec').yes_no(default: 'y')
+if answers.use_rspec
+  puts "Take a look at this:\n#{rspec_config_options}"
+  puts "Now imagine it in your config/application.rb"
+  answers.insert_rspec_config_options = Prompt.new("Is it ok if I add that to config/application.rb?").yes_no(default: 'y')
+  unless answers.insert_rspec_config_options
+    puts "Ok. I understand. I won't mess with that file."
+  end
+end
+
+answers.use_coffeescript = Prompt.new('Would you like to use CoffeeScript?').yes_no(default: 'y')
+puts "I see that you're cool like me :)" if answers.use_coffeescript
+
+rails_app_name = File.basename(Rails.root.to_s).camelize
+puts HighLine.color("Now it's time to pick your Ember applicaiton name. I'd recommend something short and sweet.", :yellow)
+puts HighLine.color("This name will be all over your code.", :yellow)
+if Prompt.new("Do you want your ember app to be named: #{rails_app_name}? If no, we'll ask next.").yes_no(default: 'y')
+  answers.ember_app_name = rails_app_name
+else 
+  answers.ember_app_name = Prompt.new("What would you like your Ember app named? (maybe just plain old: App)").ask_and_verify(/^[a-z\-_]+$/i, error: 'Must contain any of the following: letters, numbers, -, _', default: 'App')
+end
+
+answers.install_ember = Prompt.new('Would you like to install ember.js and dependencies?').yes_no(default: 'y')
+if answers.install_ember
+  answers.ember_channel = choose do |c|
+    c.prompt = HighLine.color("What version of ember would you like to install?", :yellow)
+    c.choices(*%w[release beta canary])
+  end
+  if %w[beta canary].include?(answers.ember_channel)
+    answers.install_ember_data = Prompt.new("Do you want ember-data as well?").yes_no(default: 'y')
+  else
+    answers.install_ember_data = false
+  end
+  answers.jquery_version = choose do |c|
+    c.prompt = "Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)"
+    c.choices('1.10.2', '2.0.3')
+  end
+end
+answers.install_teaspoon = Prompt.new('How about I install guard and teaspoon to run your ember application tests with QUnit?').yes_no(default: 'y')
+answers.install_phantomjs = Prompt.new('Would you like to install phantomjs?').yes_no(default: 'y')
+# ----------------------- Question and Anser Time --- END
+
+# ----------------------- Bower and Node --- START
+if answers.install_bower
   puts "Could not find npm executable: bower
   http://bower.io
   This template uses bower to manage installing javascript dependencies."
 
   if system('which npm')
     puts "looks like node and npm are already installed."
-
-    if Prompt.new('Would you like for bower to be installed?').yes_no(default: 'y')
+    if answers.install_bower
       if response = system('npm install -g bower')
         puts "bower was successfully installed"
+        bower_installed = true
       else
         puts "There was an error installing bower: #{response}"
         exit 1
@@ -146,62 +206,67 @@ unless system('which bower')
     exit 1
   end
 end
-  
 file '.bowerrc', <<EOS
 {
   "directory" : "vendor/assets/javascripts"
 }
 EOS
+# ----------------------- Bower and Node --- END
 
-# ----------------------- .bowerrc --- END
+# ----------------------- phantomjs --- START
+phantomjs_installed = false
+if answers.install_phantomjs
+  if system('which phantomjs')
+    puts "phantomjs already installed"
+    phantomjs_installed = true
+  else
+    puts 'installing phantomjs. Please be patient'
+    if response = system('npm install -g phantomjs')
+      puts 'phantomjs installed'
+      phantomjs_installed = true
+    else
+      puts "There was an error installing phantomjs: #{response}"
+      exit 1
+    end
+  end
+end
+# ----------------------- phantomjs --- END
+
+# ----------------------- install gems --- START
+gem_group :development, :test do
+  gem 'rspec-rails' if answers.use_rspec
+  gem 'teaspoon' if answers.install_teaspoon
+  gem 'guard-teaspoon' if answers.install_teaspoon
+  gem 'phantomjs' if phantomjs_installed
+end
+
+gem_group :test do
+  gem 'guard' if answers.install_teaspoon
+  gem 'guard-rspec' if answers.use_rspec
+end
+
+puts HighLine.color("Installing gems. Please be patient.", :green)
+run_bundle
+# ----------------------- install gems --- END
 
 # ----------------------- rspec --- START
-use_rspec = Prompt.new('Would you like to use rspec').yes_no(default: 'y')
-if use_rspec
-  puts "I can tell that You make all kinds of great decisions, and likely prosper in life."
-  gem_group :development, :test do
-    gem 'rspec-rails'
-  end
-  run_bundle
+if answers.use_rspec
   generate 'rspec:install'
-
-  rspec_config_options = <<-EOS
-    config.generators do |gen|
-      gen.test_framework :rspec,
-                         fixtures: true,
-                         view_specs: false,
-                         helper_specs: false,
-                         routing_specs: false
-      gen.factory_girl true
-    end
-EOS
-  puts "Take a look at this:\n#{rspec_config_options}"
-  puts "Now imagine it in your config/application.rb"
-  if Prompt.new("Is it ok if I add that to config/application.rb?").yes_no(default: 'y')
+  if answers.insert_rspec_config_options
     FileManipulator.new('config/application.rb').insert_after(/ < Rails::Application/, rspec_config_options).write!
-  else
-    puts "Ok. I understand. I won't mess with that file."
   end
 end
 # ----------------------- rspec --- END
 
 # ----------------------- ember-rails --- START
-use_coffeescript = Prompt.new('Would you like to use CoffeeScript?').yes_no(default: 'y')
-puts "I see that you're cool like me :)" if use_coffeescript
-
-if !@app_name.blank? && Prompt.new("Do you want your ember app to be named: #{@app_name}? If no, we'll ask next.").yes_no(default: 'y')
-  ember_app_name = @app_name
-else 
-  ember_app_name = Prompt.new("What would your Ember app named? (maybe just plain old: App)").ask_and_verify(/^[a-z\-_]+$/i, error: 'Must contain any of the following: letters, numbers, -, _', default: 'App')
-end
 
 # add the ember app name to config/application
 FileManipulator.new('config/application.rb').
-  insert_after(/ < Rails::Application/, "    config.ember.app_name = '#{ember_app_name.camelize}'").write!
+  insert_after(/ < Rails::Application/, "    config.ember.app_name = '#{answers.ember_app_name.camelize}'").write!
 
 puts "boostraping ember"
-generate "ember:bootstrap", "-n #{ember_app_name}", "-je #{use_coffeescript ? 'coffee' : 'js'}"
-if use_coffeescript
+generate "ember:bootstrap", "-n #{answers.ember_app_name}", "-je #{answers.use_coffeescript ? 'coffee' : 'js'}"
+if answers.use_coffeescript
   remove_file 'app/assets/javascripts/application.js'
   application_coffee = 'app/assets/javascripts/application.js.coffee'
   # add jquery at the beginning of 
@@ -209,49 +274,26 @@ if use_coffeescript
   FileManipulator.new(application_coffee).
     insert(:beginning, '#= require jquery').write!
 end
+
 # ----------------------- ember-rails --- START
-
 puts "Now let's fetch the ember libs"
-# ember_channel = Prompt.new("What version of ember would you like to install?").ask_and_verify(%w[release beta canary], default: 'release')
-if Prompt.new('Would you like to install ember.js and dependencies?').yes_no(default: 'y')
-  ember_channel = choose do |c|
-    c.prompt = HighLine.color("What version of ember would you like to install?", :yellow)
-    c.choices(*%w[release beta canary])
-  end
-  if %w[beta canary].include?(ember_channel)
-    install_ember_data = Prompt.new("Do you want ember-data as well?").yes_no(default: 'y')
+if answers.install_ember
+  generate "ember:install", "--channel=#{answers.ember_channel}", ('--ember-only' if answers.install_ember_data)
+  if bower_installed
+    run "bower install jquery##{answers.jquery_version}"
   else
-    install_ember_data = false
+    puts HighLine.color("Bower is not installed you are going to need download jquery yourself", :red)
   end
-  generate "ember:install", "--channel=#{ember_channel}", ('--ember-only' if install_ember_data)
-
-  jquery_version = choose do |c|
-    c.prompt = "Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)"
-    c.choices('1.10.2', '2.0.3')
-  end
-  run "bower install jquery##{jquery_version}"
 end
-
+# ----------------------- ember-rails --- END
 
 # ----------------------- teaspoon --- START
-if Prompt.new('How about I install guard and teaspoon to run your ember application tests with QUnit?').yes_no(default: 'y')
-  gem_group :test do
-    gem 'guard'
-    gem 'guard-rspec' if use_rspec
-  end
-
-  # I am still not sure why this also has to be in the development group
-  gem_group :test, :development do
-    gem 'teaspoon'
-    gem 'guard-teaspoon'
-  end
-
-  run_bundle
+if answers.install_teaspoon
   run 'guard init'
-  if use_rspec
+  if answers.use_rspec
     # the QUnit generator is nasty and only installs for TestUnit
     # So now for some fun getting it to work with rspec
-    generate "teaspoon:install", (' --coffee' if use_coffeescript)
+    generate "teaspoon:install", (' --coffee' if answers.use_coffeescript)
 
     path = 'config/initializers/teaspoon.rb'
     File.write(path, File.read(path).gsub('teaspoon-jasmine', 'teaspoon-qunit'))
@@ -260,38 +302,10 @@ if Prompt.new('How about I install guard and teaspoon to run your ember applicat
     # path = 'spec/teaspoon_env.rb'
     # File.write(path, File.read(path).sub(/#(config.server_port\s+)= nil/, "#{$1}= 3100"))
   else
-    generate "teaspoon:install", "--framework=qunit", ('--coffee' if use_coffeescript)
+    generate "teaspoon:install", "--framework=qunit", ('--coffee' if answers.use_coffeescript)
   end
 end
 # ----------------------- teaspoon --- END
-
-# ----------------------- phantomjs --- START
-phantomjs_installed = false
-if Prompt.new('Would you like to install phantomjs?').yes_no(default: 'y')
-  if system('which phantomjs')
-    puts "phantomjs already installed"
-    phantomjs_installed = true
-  else
-    puts 'It is recommended to install phantomjs'
-    if Prompt.new('would you like to install phantomjs').yes_no(default: 'y')
-      puts 'installing phantomjs. Please be patient'
-      if response = system('npm install -g phantomjs')
-        puts 'phantomjs installed'
-        phantomjs_installed = true
-      else
-        puts "There was an error installing phantomjs: #{response}"
-        exit 1
-      end
-    end
-  end
-end
-if phantomjs_installed
-  gem_group :development, :test do
-    gem 'phantomjs'
-  end
-  run_bundle
-end
-# ----------------------- phantomjs --- END
 
 # ----------------------- genember bin stub --- START
 genember_target = 'genember'
