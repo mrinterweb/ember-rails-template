@@ -33,6 +33,8 @@ If you're starting with a new rails app, I'd recommend starting with this:
 
     rails new app --skip-javascript --skip-test-unit
 
+Watch the thrilling screencast
+==============================
 [![Youtube ScreenShot](https://img.youtube.com/vi/KaBbGUVQrAw/0.jpg)](https://www.youtube.com/watch?v=KaBbGUVQrAw&feature=youtu.be)
 
 Thoughts
