@@ -21,7 +21,7 @@ file 'app/views/assets/index.html.erb', <<-CODE
 <!DOCTYPE html>
 <html>
 <head>
-  <title>#{@app_name.titleize}</title>
+  <title>Your cool ember.js app</title>
   <%= stylesheet_link_tag    "application", :media => "all" %>
   <%= csrf_meta_tags %>
 </head>
@@ -40,6 +40,8 @@ file 'app/assets/javascripts/templates/application.handlebars', <<-CODE
   <p>You're running an Ember.js app on top of Ruby on Rails. To get started, replace this content
   (inside <code>app/assets/javascripts/templates/application.handlebars</code>) with your application's
   HTML.</p>
+
+  {{outlet}}
 </div>
 CODE
 
