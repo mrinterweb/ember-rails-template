@@ -18,7 +18,7 @@ Since the template prompts with questions about how you want to set up your app,
 
 Some of the stuff this template can do: 
 
-* clean up your gemfile (goodby turbolinks)
+* clean up your gemfile (goodbye turbolinks)
 * install bower
 * phantomjs
 * rspec
@@ -33,7 +33,7 @@ If you're starting with a new rails app, I'd recommend starting with this:
 
     rails new app --skip-javascript --skip-test-unit
 
-Watch the thrilling screencast
+Watch the thrilling screencast!
 ==============================
 [![Youtube ScreenShot](https://img.youtube.com/vi/KaBbGUVQrAw/0.jpg)](https://www.youtube.com/watch?v=KaBbGUVQrAw&feature=youtu.be)
 

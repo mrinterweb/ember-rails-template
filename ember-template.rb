@@ -93,7 +93,7 @@ class FileManipulator
     when :end
       lines << subject
     else
-      raise 'postion must be an integer, :beginning, :end'
+      raise 'position must be an integer, :beginning, :end'
     end
     self
   end
@@ -140,7 +140,7 @@ FileManipulator.new('Gemfile').
   comment(/gem.+jbuilder/).
   write!
 
-# ----------------------- Question and Anser Time --- START
+# ----------------------- Question and Answer Time --- START
 rspec_config_options = <<-EOS
     config.generators do |gen|
       gen.test_framework :rspec,
@@ -159,7 +159,7 @@ unless File.exists?(edge_ember_template_path)
   edge_ember_template_path = 'https://raw2.github.com/mrinterweb/ember-rails-template/master/edge_template.rb'
 end
 puts "Slightly modified edge_template path: #{edge_ember_template_path}"
-if Prompt.new("Would you like to install a slightly modified tempalte based on the one found at http://emberjs.com/edge_template.rb").yes_no(default: 'y')
+if Prompt.new("Would you like to install a slightly modified template based on the one found at http://emberjs.com/edge_template.rb").yes_no(default: 'y')
   run "rake rails:template LOCATION=#{edge_ember_template_path}"
 end
 
@@ -183,7 +183,7 @@ answers.use_coffeescript = Prompt.new('Would you like to use CoffeeScript?').yes
 puts "I see that you're cool like me :)" if answers.use_coffeescript
 
 rails_app_name = File.basename(Rails.root.to_s).camelize
-puts HighLine.color("Now it's time to pick your Ember applicaiton name. I'd recommend something short and sweet.", :yellow)
+puts HighLine.color("Now it's time to pick your Ember application name. I'd recommend something short and sweet.", :yellow)
 puts HighLine.color("This name will be all over your code.", :yellow)
 if Prompt.new("Do you want your ember app to be named: #{rails_app_name}? If no, we'll ask next.").yes_no(default: 'y')
   answers.ember_app_name = rails_app_name
@@ -209,13 +209,13 @@ if answers.install_ember
 end
 answers.install_teaspoon = Prompt.new('How about I install guard and teaspoon to run your ember application tests with QUnit?').yes_no(default: 'y')
 answers.install_phantomjs = Prompt.new('Would you like to install phantomjs?').yes_no(default: 'y')
-# ----------------------- Question and Anser Time --- END
+# ----------------------- Question and Answer Time --- END
 
 # ----------------------- Bower and Node --- START
 if answers.install_bower
   puts "Could not find npm executable: bower
   http://bower.io
-  This template uses bower to manage installing javascript dependencies."
+  This template uses bower to manage installing JavaScript dependencies."
 
   if system('which npm')
     puts "looks like node and npm are already installed."
