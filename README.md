@@ -31,7 +31,7 @@ Some of the stuff this template can do:
 
 If you're starting with a new rails app, I'd recommend starting with this:
 
-    rails new app --skip-javascript --skip-test-unit --template "http://emberjs.com/edge_template.rb"
+    rails new app --skip-javascript --skip-test-unit
 
 Thoughts
 ========
