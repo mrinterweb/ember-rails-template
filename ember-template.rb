@@ -4,13 +4,15 @@
 begin
   require 'highline/import'
 rescue LoadError
+  puts "Looks like HighLine is not installed."
+  puts "The highline gem is used by the prompts in this template."
+
   gem_group :development do
     gem 'highline'
   end
   run_bundle
 
-  puts "just added the highline gem to your Gemfile"
-  puts "now that HighLine is installed, please rerun the rake rails:template task"
+  puts "\nNow that HighLine is installed, please rerun the rake rails:template task"
   exit 1
 end
 # ----------------------- highline gem --- END
