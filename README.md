@@ -10,7 +10,7 @@ I realized that getting a rails project fully configured with ember-rails was no
 Usage
 =====
 
-    rake rails:template https://raw2.github.com/mrinterweb/ember-rails-template/master/ember-template.rb
+    rake rails:template LOCATION=https://raw2.github.com/mrinterweb/ember-rails-template/master/ember-template.rb
 
 This has only been tested with modifying existing rails apps.
 
@@ -32,6 +32,8 @@ Some of the stuff this template can do:
 If you're starting with a new rails app, I'd recommend starting with this:
 
     rails new app --skip-javascript --skip-test-unit
+
+[![Youtube ScreenShot](https://img.youtube.com/vi/KaBbGUVQrAw/0.jpg)](https://www.youtube.com/watch?v=KaBbGUVQrAw&feature=youtu.be)
 
 Thoughts
 ========
