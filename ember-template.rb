@@ -325,6 +325,14 @@ end
 # ----------------------- phantomjs --- END
 
 # ----------------------- install gems --- START
+# check if ember-rails gem is available
+
+
+fm = FileManipulator.new('Gemfile')
+gem 'active_model_serializers' unless fm.find_index(/gem.+active_model_serializers/)
+gem 'ember-rails' unless fm.find_index(/gem.+ember-rails/)
+gem 'ember-source' unless fm.find_index(/gem.+ember-source/)
+
 gem_group :development, :test do
   gem 'rspec-rails' if answers.use_rspec
   gem 'teaspoon' if answers.install_teaspoon
