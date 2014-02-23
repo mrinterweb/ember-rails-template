@@ -3,7 +3,7 @@ ember-rails-template
 
 This template is an interactive configuration for existing rails applications that will help get your application all set up for ember development with [ember-rails](https://github.com/emberjs/ember-rails). The template asks you questions about how you would like your application configured and then configures your application accordingly.
 
-I made this gem because I realized that getting a rails project fully configured with ember-rails was not quite as easy as I had hoped. There are more things to do, and this template is the quickest and easiest way to get everything else configured.
+I made this template because I realized that getting a rails project fully configured with ember-rails was not quite as easy as I had hoped. There are more things to do, and this template is the quickest and easiest way to get everything else configured.
 
 Usage
 =====
