@@ -1,20 +1,14 @@
 ember-rails-template
 ====================
 
-This template is an interactive configuration that will help get your rails application all set up for ember development with ember-rails.
+This template is an interactive configuration that will help get your rails application all set up for ember development with ember-rails. The template asks you questions about how you would like your application configured and then configures your application accordingly.
 
-This is not your average Rails template. This thing will cook and serve you breakfast in bed.
-
-I realized that getting a rails project fully configured with ember-rails was not quite as easy as I had hoped. That's why I made this handy dandy tool.
+I made this gem because I realized that getting a rails project fully configured with ember-rails was not quite as easy as I had hoped. There are more things to do, and this template is the quickest and easiest way to get everything else configured.
 
 Usage
 =====
 
     rake rails:template LOCATION=https://raw2.github.com/mrinterweb/ember-rails-template/master/ember-template.rb
-
-This has only been tested with modifying existing rails apps.
-
-Since the template prompts with questions about how you want to set up your app, it installs the highline gem first, and then exits. This means you need to run bundle install. Then, rerun the rake same task.
 
 Some of the stuff this template can do: 
 
@@ -36,6 +30,8 @@ If you're starting with a new rails app, I'd recommend starting with this:
 Watch the thrilling screencast!
 ==============================
 [![Youtube ScreenShot](https://img.youtube.com/vi/KaBbGUVQrAw/0.jpg)](https://www.youtube.com/watch?v=KaBbGUVQrAw&feature=youtu.be)
+
+The template no longer requires the highline gem dependency.
 
 Thoughts
 ========
