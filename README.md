@@ -39,13 +39,17 @@ The template no longer requires the highline gem dependency.
 Q&A
 ===
 
-## How does this compare with ember-appkit-rails?
+### How does this compare with ember-appkit-rails?
 
 I prefer writing CoffeeScript to JavaScript. Ember AppKit Rails assumes that all the files you will be writing will be js files, and the file extension changes from ".js" to ".es6". There is a keyword conflict between CoffeeScript and ES6 modules "require" & "import". CoffeeScript does not get much love from the ES6 transpiler so I tend to avoid ES6 modules until better CoffeeScript support is added. I understand the need for dependency management, but I don't believe in alienating a large group of users just so ES6 modules can be used. Since the template does not currently help configure any dependency management that remains a responsibility of the user.
 
 Also I do not prefer how Ember AppKit Rails adds ember javascript folders directly into app instead of app/assets/javascripts. This means that your models and controller directories are no longer just for ruby files. I do not find that this plays nicely with existing rails applications and conflicts with rails conventions.
 
+### How do I ask a question about ember-rails-template or request a feature?
+
+Ask me on Twitter [@mrinterweb](https://twitter.com/mrinterweb), or ask me on [reddit](http://www.reddit.com/r/emberjs/comments/1ym4w4/rails_template_that_helps_configure_emberrails/)
+
 Thoughts
 ========
 
-After getting further into this I started thinking that I should just merge this into ember-rails. It would take a decent amount of refactoring to get this into ember-rails. I also learned a thing or two about rails templates.
+After getting further into this I started thinking that I should just merge this into ember-rails. It would take a decent amount of refactoring to get this into ember-rails. I also learned a thing or two about rails templates. Writing my own CLI class in place of highline was entertaining.
