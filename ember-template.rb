@@ -365,14 +365,17 @@ FileManipulator.new('config/application.rb').
   insert_after(/ < Rails::Application/, "    config.ember.app_name = '#{answers.ember_app_name.camelize}'").write!
 
 puts "boostraping ember"
-generate "ember:bootstrap", "-n #{answers.ember_app_name}", "-je #{answers.use_coffeescript ? 'coffee' : 'js'}"
+
+generate "ember:bootstrap", "-n #{answers.ember_app_name}", "--javascript-engine=#{answers.use_coffeescript ? 'coffee' : 'js'}"
 if answers.use_coffeescript
   remove_file 'app/assets/javascripts/application.js'
-  application_coffee = 'app/assets/javascripts/application.js.coffee'
-  # add jquery at the beginning of 
-  puts "adding require jquery to #{application_coffee}"
-  FileManipulator.new(application_coffee).
-    insert(:beginning, '#= require jquery').write!
+  application_coffee_path = 'app/assets/javascripts/application.js.coffee'
+  if File.exists?(application_coffee_path)
+    # add jquery at the beginning of 
+    puts "adding require jquery to #{application_coffee_path}"
+    FileManipulator.new(application_coffee_path).
+      insert(:beginning, '#= require jquery').write!
+  end
 end
 
 # ----------------------- ember-rails --- START
