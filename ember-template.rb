@@ -1,65 +1,118 @@
-# require 'pry'
+require 'pry'
+require 'readline'
 
-# ----------------------- highline gem --- START
-begin
-  require 'highline/import'
-rescue LoadError
-  puts "Looks like HighLine is not installed."
-  puts "The highline gem is used by the prompts in this template."
-
-  gem_group :development do
-    gem 'highline'
+module Color
+  COLORS = %w[black red green yellow blue magenta cyan white]
+  COLORS.each_with_index do |color, i|
+    define_method(color.to_sym) do |str|
+      wrapper(i, str)
+    end
   end
-  run_bundle
 
-  puts "\nNow that HighLine is installed, please rerun the rake rails:template task"
-  exit 1
+  def color(str, color)
+    unless color.kind_of?(Integer)
+      color = COLORS.find_index(color.to_s)
+    end
+    wrapper(color.to_s, str)
+  end
+
+  private
+
+  def wrapper(color_code, str)
+    "\033[3#{color_code}m#{str}\033[0m"
+  end
+
 end
-# ----------------------- highline gem --- END
 
 class Prompt
-  def initialize(question, color=nil)
+  include Color
+  class InvalidResponse < StandardError; end
+  class EmptyResponse < StandardError; end
+
+  def initialize(question, color=nil, options={})
     @question = question
     @color = color || :yellow
+    @options = options
   end
 
   def yes_no(options={})
-    agree(HighLine.color(@question, @color)) do |q|
-      if default = options[:default]
-        q.default = default
+    set_options(options)
+    accepted_answers = %w[yes no y n]
+    answer = ask do
+      validate(prompt, accepted_answers)
+    end
+    %w[y yes].include?(answer)
+  end
+
+  # for some reason HighLine verify was not working so I wrote this
+  def ask_and_verify(conditions=nil, options={})
+    set_options(options)
+    conditions ||= @options[:conditions]
+    ask do
+      if conditions.kind_of?(Array)
+        putsc "available selections:"
+        conditions.each_with_index do |con, i|
+          putsc "#{i+1}: #{con}"
+        end
+      end
+      validate(prompt, conditions)
+    end
+  end
+
+  def ask(options={}, &block)
+    set_options(options)
+    default = @options[:default]
+    max_retry = 5
+    default_str = default ? " |#{default}|" : ""
+    begin
+      putsc @question+default_str, @color
+      yield
+    rescue InvalidResponse => e
+      max_retry -= 1
+      if max_retry > 0
+        putsc @options[:error] || e.message
+        retry
+      else
+        putsc "you may be confused. Get your head straight", :red
+        exit 1
       end
     end
   end
 
-  # for some reason HighLine verify was not working so I wrote this
-  def ask_and_verify(condition=nil, options={}, &block)
-    answer = nil
-    loop do
-      q_block = -> {}
-      if default = options[:default]
-        q_block = ->(q) { q.default = default }
+  private
+
+  def prompt
+    Readline.readline
+  end
+
+  def putsc(str, color_sym=:yellow)
+    puts color(str, color_sym)
+  end
+
+  def validate(answer, accepted_answers)
+    return @options[:default] if answer.blank? and @options[:default]
+    case accepted_answers.class.name
+    when 'Regexp'
+      unless answer =~ accepted_answers
+        raise InvalidResponse, "Answer must match format #{accepted_answers}"
       end
-      answer = ask(HighLine.color(@question, @color), &q_block)
-
-      case condition.class.name
-      when 'Regexp'
-        break if answer =~ condition
-      when 'String'
-        break if answer == condition
-      when 'Array'
-        break if condition.include?(answer)
+    when 'Array'
+      if answer.kind_of?(String) && answer =~ /^[0-9]+$/
+        answer = accepted_answers[answer.to_i - 1] 
       end
-
-      if block_given? && block.call(answer)
-        break
+      unless accepted_answers.include?(answer)
+        raise InvalidResponse, "Please answer with one of the following: #{accepted_answers.join(', ')}"
       end
-
-      break if !block_given? and condition.nil?
-
-      options[:error] ||= "Didn't get that. Try again."
-      puts HighLine.color(options[:error], :red)
+    else
+      raise "unexpected accepted_answers type: #{accepted_answers.class.name}"
     end
     answer
+  end
+
+  def set_options(options)
+    if !options.empty? || @options.nil?
+      @options = options
+    end
   end
 
 end
@@ -116,8 +169,6 @@ class FileManipulator
     File.write(@path, lines.join)
   end
 
-  private
-
   def find_index(matcher)
     proc = case matcher.class.name
     when 'Regexp'
@@ -127,6 +178,8 @@ class FileManipulator
     end
     lines.find_index(&proc)
   end
+
+  private
 
   def lines
     @lines ||= File.readlines(@path)
@@ -154,12 +207,17 @@ EOS
 
 answers = OpenStruct.new
 
+class Pretty
+  include Color
+end
+pretty = Pretty.new
+
 edge_ember_template_path = File.join(File.dirname(__FILE__), 'edge_template.rb')
 unless File.exists?(edge_ember_template_path)
   edge_ember_template_path = 'https://raw2.github.com/mrinterweb/ember-rails-template/master/edge_template.rb'
 end
 puts "Slightly modified edge_template path: #{edge_ember_template_path}"
-if Prompt.new("Would you like to install a slightly modified template based on the one found at http://emberjs.com/edge_template.rb").yes_no(default: 'y')
+if answers.use_edge_template = Prompt.new("Would you like to install a slightly modified template based on the one found at http://emberjs.com/edge_template.rb").yes_no(default: 'y')
   run "rake rails:template LOCATION=#{edge_ember_template_path}"
 end
 
@@ -171,8 +229,8 @@ else
 end
 answers.use_rspec = Prompt.new('Would you like to use rspec').yes_no(default: 'y')
 if answers.use_rspec
-  puts HighLine.color("Take a look at this:\n#{rspec_config_options}", :yellow)
-  puts HighLine.color("Now imagine it in your config/application.rb", :yellow)
+  puts pretty.color("Take a look at this:\n#{rspec_config_options}", :yellow)
+  puts pretty.color("Now imagine it in your config/application.rb", :yellow)
   answers.insert_rspec_config_options = Prompt.new("Is it ok if I add that to config/application.rb?").yes_no(default: 'y')
   unless answers.insert_rspec_config_options
     puts "Ok. I understand. I won't mess with that file."
@@ -183,8 +241,8 @@ answers.use_coffeescript = Prompt.new('Would you like to use CoffeeScript?').yes
 puts "I see that you're cool like me :)" if answers.use_coffeescript
 
 rails_app_name = File.basename(Rails.root.to_s).camelize
-puts HighLine.color("Now it's time to pick your Ember application name. I'd recommend something short and sweet.", :yellow)
-puts HighLine.color("This name will be all over your code.", :yellow)
+puts pretty.color("Now it's time to pick your Ember application name. I'd recommend something short and sweet.", :yellow)
+puts pretty.color("This name will be all over your code.", :yellow)
 if Prompt.new("Do you want your ember app to be named: #{rails_app_name}? If no, we'll ask next.").yes_no(default: 'y')
   answers.ember_app_name = rails_app_name
 else 
@@ -193,19 +251,22 @@ end
 
 answers.install_ember = Prompt.new('Would you like to install ember.js and dependencies?').yes_no(default: 'y')
 if answers.install_ember
-  answers.ember_channel = choose do |c|
-    c.prompt = HighLine.color("What version of ember would you like to install?", :yellow)
-    c.choices(*%w[release beta canary])
-  end
+  answers.ember_channel = Prompt.new("What version of ember would you like to install?").ask_and_verify(%w[release beta canary])
+  # answers.ember_channel = choose do |c|
+  #   c.prompt = pretty.color("What version of ember would you like to install?", :yellow)
+  #   c.choices(*%w[release beta canary])
+  # end
   if %w[beta canary].include?(answers.ember_channel)
     answers.install_ember_data = Prompt.new("Do you want ember-data as well?").yes_no(default: 'y')
   else
     answers.install_ember_data = false
   end
-  answers.jquery_version = choose do |c|
-    c.prompt = "Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)"
-    c.choices('1.10.2', '2.0.3')
-  end
+  answers.jquery_version = Prompt.new("Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)").
+    ask_and_verify(['1.10.2', '2.0.3'])
+  # answers.jquery_version = choose do |c|
+  #   c.prompt = "Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)"
+  #   c.choices('1.10.2', '2.0.3')
+  # end
 end
 answers.install_teaspoon = Prompt.new('How about I install guard and teaspoon to run your ember application tests with QUnit?').yes_no(default: 'y')
 answers.install_phantomjs = Prompt.new('Would you like to install phantomjs?').yes_no(default: 'y')
@@ -276,7 +337,7 @@ gem_group :test do
   gem 'guard-rspec' if answers.use_rspec
 end
 
-puts HighLine.color("Installing gems. Please be patient.", :green)
+puts pretty.color("Installing gems. Please be patient.", :green)
 run_bundle
 # ----------------------- install gems --- END
 
@@ -313,7 +374,7 @@ if answers.install_ember
   if bower_installed
     run "bower install jquery##{answers.jquery_version}"
   else
-    puts HighLine.color("Bower is not installed you are going to need download jquery yourself", :red)
+    puts pretty.color("Bower is not installed you are going to need download jquery yourself", :red)
   end
 end
 # ----------------------- ember-rails --- END
