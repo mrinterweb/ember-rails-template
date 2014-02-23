@@ -21,7 +21,7 @@ file 'app/views/assets/index.html.erb', <<-CODE
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Your cool ember.js app</title>
+  <title>Ember.js app title</title>
   <%= stylesheet_link_tag    "application", :media => "all" %>
   <%= csrf_meta_tags %>
 </head>
