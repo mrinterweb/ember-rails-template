@@ -225,8 +225,10 @@ bower_installed = false
 if system('which bower')
   bower_installed = true
 else
+  puts pretty.color("Bower is a node.js javascript package manager. Installing it is not necessary.", :yellow)
   answers.install_bower = Prompt.new('Would you like for bower to be installed?').yes_no(default: 'y')
 end
+
 answers.use_rspec = Prompt.new('Would you like to use rspec').yes_no(default: 'y')
 if answers.use_rspec
   puts pretty.color("Take a look at this:\n#{rspec_config_options}", :yellow)
@@ -252,10 +254,6 @@ end
 answers.install_ember = Prompt.new('Would you like to install ember.js and dependencies?').yes_no(default: 'y')
 if answers.install_ember
   answers.ember_channel = Prompt.new("What version of ember would you like to install?").ask_and_verify(%w[release beta canary])
-  # answers.ember_channel = choose do |c|
-  #   c.prompt = pretty.color("What version of ember would you like to install?", :yellow)
-  #   c.choices(*%w[release beta canary])
-  # end
   if %w[beta canary].include?(answers.ember_channel)
     answers.install_ember_data = Prompt.new("Do you want ember-data as well?").yes_no(default: 'y')
   else
@@ -263,10 +261,6 @@ if answers.install_ember
   end
   answers.jquery_version = Prompt.new("Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)").
     ask_and_verify(['1.10.2', '2.0.3'])
-  # answers.jquery_version = choose do |c|
-  #   c.prompt = "Pick your jquery version. (1.10.x is more compatible. 2.0.x is best for \"modern\" browsers)"
-  #   c.choices('1.10.2', '2.0.3')
-  # end
 end
 answers.install_teaspoon = Prompt.new('How about I install guard and teaspoon to run your ember application tests with QUnit?').yes_no(default: 'y')
 answers.install_phantomjs = Prompt.new('Would you like to install phantomjs?').yes_no(default: 'y')
@@ -298,11 +292,13 @@ if answers.install_bower
     exit 1
   end
 end
-file '.bowerrc', <<EOS
+if bower_installed
+  file '.bowerrc', <<EOS
 {
   "directory" : "vendor/assets/javascripts"
 }
 EOS
+end
 # ----------------------- Bower and Node --- END
 
 # ----------------------- phantomjs --- START
@@ -332,6 +328,8 @@ fm = FileManipulator.new('Gemfile')
 gem 'active_model_serializers' unless fm.find_index(/gem.+active_model_serializers/)
 gem 'ember-rails' unless fm.find_index(/gem.+ember-rails/)
 gem 'ember-source' unless fm.find_index(/gem.+ember-source/)
+
+gem 'ember-gen', group: :development
 
 gem_group :development, :test do
   gem 'rspec-rails' if answers.use_rspec
@@ -382,11 +380,9 @@ end
 puts "Now let's fetch the ember libs"
 if answers.install_ember
   generate "ember:install", "--channel=#{answers.ember_channel}", ('--ember-only' if answers.install_ember_data)
-  if bower_installed
-    run "bower install jquery##{answers.jquery_version}"
-  else
-    puts pretty.color("Bower is not installed you are going to need download jquery yourself", :red)
-  end
+
+  puts "Downloading JQuery #{answers.jquery_version}"
+  run "rake embergen:install:jquery[#{answers.jquery_version},uncompressed]"
 end
 # ----------------------- ember-rails --- END
 
