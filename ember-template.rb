@@ -1,4 +1,4 @@
-require 'pry'
+# require 'pry'
 require 'readline'
 
 module Color
