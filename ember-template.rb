@@ -407,23 +407,9 @@ end
 # ----------------------- teaspoon --- END
 
 # ----------------------- genember bin stub --- START
-genember_target = 'genember'
-unless File.exists?(genember_target)
-  source_genember = File.join(File.dirname(__FILE__), 'genember.rb')
-  if File.exists?(source_genember)
-    file genember_target, File.read(source_genember)
-  else
-    # go fetch it from github
-    require 'open-uri'
-    file genember_target, open('https://raw2.github.com/mrinterweb/ember-rails-template/master/genember.rb').read
-  end
-  puts 'Just added a handy shortcut to "rails generate ember:* *" called genember as a binstub.'
-end
-unless File.executable?(genember_target)
-  File.chmod(0755, genember_target)
-end
+puts pretty.color('A new command is available called "embergen". It is used for generating files.', :green)
 if system "ln -s app/assets/javascripts js"
-  puts "just added a symlink to your javascripts folder. It's a time saver"
+  puts pretty.color("just added a symlink to your javascripts folder. It's a time saver.", :green)
 end
 # ----------------------- genember bin stub --- END
 
